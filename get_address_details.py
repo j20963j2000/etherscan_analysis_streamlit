@@ -49,7 +49,7 @@ class Get_address_details():
 
         return data
     
-    def get_txns_sum_by_datetime(self):
+    def get_txns_sum_by_all_datetime(self):
         address_data = self.get_all_txns()
         txns_by_datetime = {}
 
@@ -62,7 +62,7 @@ class Get_address_details():
                 txns_by_datetime[time] = 1
         return txns_by_datetime
     
-    def get_normal_txns_by_datetime(self):
+    def get_normal_txns_by_all_datetime(self):
     
         """
         Get normal txns by date time
@@ -86,7 +86,7 @@ class Get_address_details():
 
         return txns_by_datetime
     
-    def get_internal_txns_by_datetime(self):
+    def get_internal_txns_by_all_datetime(self):
     
         """
         Get normal txns by date time
