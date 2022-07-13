@@ -1,3 +1,4 @@
+import pandas as pd
 from requests import get
 from datetime import datetime
 
@@ -29,7 +30,7 @@ class Get_address_details():
         response = get(balance_url)
         data = response.json()
 
-        value = int(data["result"]) / ETHER_VALUE
+        value = int(data["result"]) / self.ETHER_VALUE
         return value
     
     def get_all_txns(self):
@@ -60,9 +61,42 @@ class Get_address_details():
                 txns_by_datetime[time] += 1
             else:
                 txns_by_datetime[time] = 1
+
         return txns_by_datetime
+
+    def get_txns_by_year(self, target_year):
+
+        address_result = self.get_txns_sum_by_all_datetime()
+
+        if target_year == "all":
+            year_time_dict = {}
     
-    def get_normal_txns_by_all_datetime(self):
+            for year_day in address_result:
+                year = year_day.split("-")[0]
+                if year in year_time_dict:
+                    year_time_dict[year] += 1
+                else:
+                    year_time_dict[year] = 1
+    
+            return year_time_dict
+        
+        else:
+            month_time_dict = {}
+    
+            for year_day in address_result:
+                year, month = year_day.split("-")[0], year_day.split("-")[1]
+                if year == target_year:
+                    if month in month_time_dict:
+                        month_time_dict[month] += 1
+                    else:
+                        month_time_dict[month] = 1
+                else:
+                    pass
+                
+            return month_time_dict
+
+
+    def get_nor_itn_txns_by_year(self, txn_type, target_year):
     
         """
         Get normal txns by date time
@@ -70,7 +104,11 @@ class Get_address_details():
 
         txns_by_datetime = {}
 
-        transactions_url = self.make_api_url("account", "txlist", startblock=0, endblock=99999999, page=1, offset=10000, sort="asc")
+        if txn_type =="normal":
+            transactions_url = self.make_api_url("account", "txlist", startblock=0, endblock=99999999, page=1, offset=10000, sort="asc")
+        else:
+            transactions_url = self.make_api_url("account", "txlistinternal", startblock=0, endblock=99999999, page=1, offset=10000, sort="asc")
+
         response = get(transactions_url)
         data = response.json()["result"]
 
@@ -84,7 +122,33 @@ class Get_address_details():
             else:
                 txns_by_datetime[time] = 1
 
-        return txns_by_datetime
+        if target_year == "all":
+            year_time_dict = {}
+    
+            for year_day in txns_by_datetime:
+                year = year_day.split("-")[0]
+                if year in year_time_dict:
+                    year_time_dict[year] += 1
+                else:
+                    year_time_dict[year] = 1
+    
+            return year_time_dict
+        
+        else:
+            month_time_dict = {}
+    
+            for year_day in txns_by_datetime:
+                year, month = year_day.split("-")[0], year_day.split("-")[1]
+                if year == target_year:
+                    if month in month_time_dict:
+                        month_time_dict[month] += 1
+                    else:
+                        month_time_dict[month] = 1
+                else:
+                    pass
+                
+            return month_time_dict
+
     
     def get_internal_txns_by_all_datetime(self):
     
