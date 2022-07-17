@@ -36,28 +36,38 @@ st.sidebar.text('')
 ### INPUT ADDRESS ###
 
 st.sidebar.markdown("**Who you want to trace ?**")
-input_address = st.sidebar.text_input("Ether Address", value = "0x73bceb1cd57c711feac4224d062b0f6ff338501e")
-get_address_details = Get_address_details(input_address)
+
+if st.sidebar.button("Vitalik.eth"):
+    input_address = st.sidebar.text_input("Ether Address", value = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045")
+else:
+    input_address = st.sidebar.text_input("Ether Address", value = "")
+    
 
 
 ### TXNS ACTIVITIES ###
-row4_spacer1, row4_1, row4_spacer2 = st.columns((.2, 7.1, .2))
-with row4_1:
-    st.subheader('Analysis address txns')
-row5_spacer1, row5_1, row5_spacer2, row5_2, row5_spacer3  = st.columns((.2, 2.3, .4, 4.4, .2))
+if len(input_address) == 42:
+    get_address_details = Get_address_details(input_address)
+    row4_spacer1, row4_1, row4_spacer2 = st.columns((.2, 7.1, .2))
+    with row4_1:
+        st.subheader('Analysis address txns')
+    row5_spacer1, row5_1, row5_spacer2, row5_2, row5_spacer3  = st.columns((.2, 2.3, .4, 4.4, .2))
 
-with row5_1:
-    st.markdown('You can change important parameters')   
-    txns_type = ["all", "normal", "internal"]
-    txns_type = st.selectbox ("Tracing what kinds of transactions ?", txns_type)
+    with row5_1:
+        st.markdown('You can change important parameters')   
+        txns_type = ["all", "normal", "internal"]
+        txns_type = st.selectbox ("Tracing what kinds of transactions ?", txns_type)
 
-    test_time = ["all", "2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"]
-    txns_time = st.selectbox("Tracing time period", test_time)
+        test_time = ["all", "2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"]
+        txns_time = st.selectbox("Tracing time period", test_time)
 
-with row5_2:
-    if txns_type == "all":
-        address_result = get_address_details.get_txns_by_year(txns_time)
-        plot_single_address_txns(address_result)
-    else:
-        address_result = get_address_details.get_nor_itn_txns_by_year(txns_type, txns_time)
-        plot_single_address_txns(address_result)
+        st.markdown("More balance details could be found [DeBank](https://debank.com/profile/{})".format(input_address))
+
+    with row5_2:
+        if txns_type == "all":
+            address_result = get_address_details.get_txns_by_year(txns_time)
+            plot_single_address_txns(address_result)
+        else:
+            address_result = get_address_details.get_nor_itn_txns_by_year(txns_type, txns_time)
+            plot_single_address_txns(address_result)
+else:
+    st.markdown("Give us valid address !")
