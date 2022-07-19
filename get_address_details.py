@@ -1,15 +1,11 @@
+from calendar import c
 import pandas as pd
 from requests import get
 from datetime import datetime
 
+
 class Get_address_details():
-    """
-    Get the following informations from a single address:
-        - balance
-        - all txns
-        - normal txns
-        - internal txns
-    """
+    
     def __init__(self, address):
        
         self.address = address
@@ -25,6 +21,21 @@ class Get_address_details():
 
         return url
     
+    def make_hash_api_url(self, module, action, txhash, **kwargs):
+        url = self.BASE_URL + f"?module={module}&action={action}&txhash={txhash}&apikey={self.API_KEY}"
+        
+        for key, value in kwargs.items():
+            url += f"&{key}={value}"
+
+        return url
+    
+    def get_txns_from_txnhash(self, txhash):
+        txn_url = self.make_hash_api_url("account", "txlistinternal", txhash)
+        responce = get(txn_url)
+        data = responce.json()
+        
+        return data["result"]
+        
     def get_account_balance(self):
         balance_url = self.make_api_url("account", "balance", tag="latest")
         response = get(balance_url)
@@ -39,137 +50,59 @@ class Get_address_details():
         """
         transactions_url = self.make_api_url("account", "txlist", startblock=0, endblock=99999999, page=1, offset=10000, sort="asc")
         response = get(transactions_url)
-        data = response.json()["result"]
-
+        nor_data = response.json()["result"]
+        nor_df = pd.DataFrame(nor_data)
+        nor_df.insert(1, "txn_type", value ="normal")
+        
         internal_tx_url = self.make_api_url("account", "txlistinternal", startblock=0, endblock=99999999, page=1, offset=10000, sort="asc")
-        response2 = get(internal_tx_url)
-        data2 = response2.json()["result"]
-
-        data.extend(data2)
-        data.sort(key=lambda x: int(x['timeStamp']))
-
-        return data
-    
-    def get_txns_sum_by_all_datetime(self):
-        address_data = self.get_all_txns()
-        txns_by_datetime = {}
-
-        for txn_data in address_data:
-            time = str(datetime.fromtimestamp(int(txn_data["timeStamp"]))).split(" ")[0]
-
-            if time in txns_by_datetime:
-                txns_by_datetime[time] += 1
-            else:
-                txns_by_datetime[time] = 1
-
-        return txns_by_datetime
-
-    def get_txns_by_year(self, target_year):
-
-        address_result = self.get_txns_sum_by_all_datetime()
-
-        if target_year == "all":
-            year_time_dict = {}
-    
-            for year_day in address_result:
-                year = year_day.split("-")[0]
-                if year in year_time_dict:
-                    year_time_dict[year] += 1
-                else:
-                    year_time_dict[year] = 1
-    
-            return year_time_dict
+        in_response = get(internal_tx_url)
+        in_data = in_response.json()["result"]
+        in_df = pd.DataFrame(in_data)
+        in_df.insert(1, "txn_type", value = "internal")
         
-        else:
-            month_time_dict = {}
-    
-            for year_day in address_result:
-                year, month = year_day.split("-")[0], year_day.split("-")[1]
-                if year == target_year:
-                    if month in month_time_dict:
-                        month_time_dict[month] += 1
-                    else:
-                        month_time_dict[month] = 1
-                else:
-                    pass
-                
-            return month_time_dict
-
-
-    def get_nor_itn_txns_by_year(self, txn_type, target_year):
-    
-        """
-        Get normal txns by date time
-        """
-
-        txns_by_datetime = {}
-
-        if txn_type =="normal":
-            transactions_url = self.make_api_url("account", "txlist", startblock=0, endblock=99999999, page=1, offset=10000, sort="asc")
-        else:
-            transactions_url = self.make_api_url("account", "txlistinternal", startblock=0, endblock=99999999, page=1, offset=10000, sort="asc")
-
-        response = get(transactions_url)
-        data = response.json()["result"]
-
-        data.sort(key=lambda x: int(x['timeStamp']))
-
-        for d in data:
-            time = str(datetime.fromtimestamp(int(d["timeStamp"]))).split(" ")[0]
-
-            if time in txns_by_datetime:
-                txns_by_datetime[time] += 1
-            else:
-                txns_by_datetime[time] = 1
-
-        if target_year == "all":
-            year_time_dict = {}
-    
-            for year_day in txns_by_datetime:
-                year = year_day.split("-")[0]
-                if year in year_time_dict:
-                    year_time_dict[year] += 1
-                else:
-                    year_time_dict[year] = 1
-    
-            return year_time_dict
+        data_df = pd.concat([nor_df, in_df], join = "outer")
         
-        else:
-            month_time_dict = {}
+        new_time_list = []
+        for idx, timestamp in enumerate(data_df["timeStamp"]):
+            data_df["timeStamp"][idx] = int(timestamp)
+            new_time = str(datetime.fromtimestamp(int(timestamp))).split(" ")[0]
+            new_time_list.append(new_time)
+
+        data_df.insert(1, "datetime", new_time_list)
+        data_df["datetime"] = pd.to_datetime(data_df["datetime"])
+        data_df = data_df.sort_index()
+        
+        date_df_out = data_df.set_index("datetime")
+
+        return date_df_out
+        
+def get_txn_counts(address_df, txn_type, txn_time):
+
+    if txn_type == "all" and txn_time == "all":
+        year_list = {str(i):len(address_df.loc[str(i)]) for i in range(2015, 2023)}
+        result = pd.DataFrame(list(year_list.items()), columns = ["year", "counts"])
+        return result
     
-            for year_day in txns_by_datetime:
-                year, month = year_day.split("-")[0], year_day.split("-")[1]
-                if year == target_year:
-                    if month in month_time_dict:
-                        month_time_dict[month] += 1
-                    else:
-                        month_time_dict[month] = 1
-                else:
-                    pass
-                
-            return month_time_dict
-
+    elif txn_type == "all" and txn_time != "all":
+        year_list_output = {str(month):0 for month in range(1, 13)}
+        month_count = {str(i):len(address_df.loc["{}-{}".format(txn_time, i)]) for i in range(1, 13)}
+        year_list_output.update(month_count)
+        result = pd.DataFrame(list(year_list_output.items()), columns = ["month", "counts"])
+        return result
     
-    def get_internal_txns_by_all_datetime(self):
-    
-        """
-        Get normal txns by date time
-        """
+    elif txn_type != "all" and txn_time == "all":
+        mask = address_df["txn_type"] == txn_type
+        year_list = {str(i):len(address_df[mask].loc[str(i)]) for i in range(2015, 2023)}
+        result = pd.DataFrame(list(year_list.items()), columns = ["year", "counts"])
+        return result
 
-        txns_by_datetime = {}
+    else:            
+        year_list_output = {str(month):0 for month in range(1, 13)}
 
-        transactions_url = self.make_api_url("account", "txlistinternal", startblock=0, endblock=99999999, page=1, offset=10000, sort="asc")
-        response = get(transactions_url)
-        data = response.json()["result"]
+        for i in range(1, 13):
+            tmp_df = address_df.loc["{}-{}".format(txn_time, i)]
+            tmp_mask = tmp_df["txn_type"] == txn_type
+            year_list_output[str(i)] = len(tmp_df[tmp_mask])
 
-        data.sort(key=lambda x: int(x['timeStamp']))
-
-        for d in data:
-            time = str(datetime.fromtimestamp(int(d["timeStamp"]))).split(" ")[0]
-
-            if time in txns_by_datetime:
-                txns_by_datetime[time] += 1
-            else:
-                txns_by_datetime[time] = 1
-
-        return txns_by_datetime
+        result = pd.DataFrame(list(year_list_output.items()), columns = ["month", "counts"])
+        return result
