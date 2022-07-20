@@ -2,7 +2,11 @@ from calendar import c
 import pandas as pd
 from requests import get
 from datetime import datetime
+import streamlit as st
 
+API_KEY = "PER4V6RYCAU4TZ54M69D9GXHWNVKX6DY7Z"
+BASE_URL = "https://api.etherscan.io/api"
+ETHER_VALUE = 10 ** 18
 
 class Get_address_details():
     
@@ -75,7 +79,20 @@ class Get_address_details():
         date_df_out = data_df.set_index("datetime")
 
         return date_df_out
-        
+
+def make_sourcecode_api_url(address, **kwargs):
+    url = BASE_URL + f"?module=contract&action=getsourcecode&address={address}&apikey={API_KEY}"
+
+    for key, value in kwargs.items():
+        url += f"&{key}={value}"
+
+    return url
+
+def get_contract_name(contract_address):
+    responce = get(make_sourcecode_api_url(contract_address)).json()
+    name = responce["result"][0]["ContractName"]
+    return name
+
 def get_txn_counts(address_df, txn_type, txn_time):
 
     if txn_type == "all" and txn_time == "all":
@@ -106,3 +123,43 @@ def get_txn_counts(address_df, txn_type, txn_time):
 
         result = pd.DataFrame(list(year_list_output.items()), columns = ["month", "counts"])
         return result
+
+def get_contract_df(target_address, address_df, txn_type, txn_year, txn_month):
+    mask = address_df["txn_type"] == txn_type
+    tmp_df = address_df[mask].loc[txn_year+"-"+txn_month]
+
+    contarct_list = []
+    contarct_set = set()
+    if len(tmp_df) != 0:
+        for data in tmp_df.iterrows(): 
+            
+            from_ads = data[1][7]
+            to_ads = data[1][8]
+
+            contarct_set.add(from_ads)
+            contarct_set.add(to_ads)
+
+            hash = data[1][3]
+            value = int(data[1][9])/(10 ** 18)
+            if from_ads == target_address.lower():
+                tmp_contract_dict = {"hash":hash, "ads":to_ads, "value(ETH)":value}
+            if to_ads == target_address.lower():
+                tmp_contract_dict = {"hash":hash, "ads":from_ads, "value(ETH)":value}
+            contarct_list.append(tmp_contract_dict)
+
+        contarct_set.remove(target_address.lower())
+        contract_df = pd.DataFrame(contarct_list)
+        contract_name = {}
+        for i in contarct_set:
+            name = get_contract_name(i)
+            if name == "":
+                contract_name[i] = "unknown"
+            else:
+                contract_name[i] = name
+        contract_df.insert(0, "ContractName", "unknown")
+        for ads in contract_name:
+            # df.loc[df.grades>50,'result']='success'
+            contract_df.loc[contract_df.ads == ads, "ContractName"] = contract_name[ads]
+        return contract_df, contract_name
+    else:
+        st.write("No Data Found")

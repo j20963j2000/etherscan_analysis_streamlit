@@ -2,8 +2,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from get_address_details import Get_address_details, get_txn_counts
+from get_address_details import Get_address_details, get_txn_counts, get_contract_df
 from ploty import  plot_single_address_txns
+from control_botton_config import row7_txn_month_config
 
 from streamlit_echarts import st_echarts
 
@@ -88,16 +89,17 @@ if len(input_address) == 42:
     row7_spacer1, row7_1, row7_spacer2, row7_2, row7_spacer3, row7_3, row7_spacer4  = st.columns((1, 2, 1, 2, 1, 2, 1))
 
     with row7_1:
-        test_time_year = ["2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"]
-        txns_time_year = st.selectbox("Tracing time period", test_time_year)
+        txns_type = ["internal"]
+        txns_type_botton = st.selectbox ("Tracing what kinds of transactions ?", txns_type)
 
     with row7_2:
-        test_time_month = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-        txns_time_month = st.selectbox("Tracing time period", test_time_month)
+
+        txns_year = ["2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015"]
+        txns_year_botton = st.selectbox("Tracing time period", txns_year)
 
     with row7_3:
-        txns_type = ["normal", "internal"]
-        txns_type = st.selectbox ("Tracing what kinds of transactions ?", txns_type)
+    
+        txns_month_botton = st.selectbox("Tracing time period", row7_txn_month_config(txns_year_botton))
 
     row8_spacer1, row8_1, row8_spacer2, row8_2, row8_spacer3  = st.columns((.2, 2.3, .4, 4.4, .2))
     with row8_1:
@@ -142,14 +144,15 @@ if len(input_address) == 42:
             st.write(s)
     
     with row8_2:
-        st.table(address_df.head(3))
+        contract_df, contract_name = get_contract_df(input_address, address_df, str(txns_type_botton), str(txns_year_botton), str(txns_month_botton))
+        st.table(contract_df)
 
     row9_spacer1, row9_1, row9_spacer2 = st.columns((.2, 7.1, .2))
 
     with row9_1:
-        contactname_list = list(address_df.columns)
+        contactname_list = set(contract_name.values())
         contract_button = st.selectbox("Select a Contract to see details", contactname_list)
-        st.table(address_df[contract_button].head(5))
+        st.write(contract_df[contract_df.ContractName == contract_button])
 
 else:
     st.markdown("Give us valid address !")
