@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from get_address_details import Get_address_details, get_txn_counts, get_contract_df, add_contract_url
+from get_address_details import Get_address_details, get_txn_counts, get_contract_df, add_contract_url, count_contra_values
 from ploty import  plot_single_address_txns
 from control_botton_config import row7_txn_month_config
 
@@ -101,61 +101,75 @@ if len(input_address) == 42:
     
         txns_month_botton = st.selectbox("Tracing time period", row7_txn_month_config(txns_year_botton))
 
-    row8_spacer1, row8_1, row8_spacer2, row8_2, row8_spacer3  = st.columns((.2, 2.3, .4, 4.4, .2))
-    with row8_1:
-        options = {
-                    "title": {"text": "某站点用户访问来源", "subtext": "纯属虚构", "left": "center"},
-                    "tooltip": {"trigger": "item"},
-                    "legend": {
-                        "orient": "vertical",
-                        "left": "left",
-                    },
-                    "series": [
-                            {
-                                "name": "访问来源",
-                                "type": "pie",
-                                "radius": "50%",
-                                "data": [
-                                    {"value": 1048, "name": "搜索引擎"},
-                                    {"value": 735, "name": "直接访问"},
-                                    {"value": 580, "name": "邮件营销"},
-                                    {"value": 484, "name": "联盟广告"},
-                                    {"value": 300, "name": "视频广告"},
-                                ],
-                                "emphasis": {
-                                    "itemStyle": {
-                                        "shadowBlur": 10,
-                                        "shadowOffsetX": 0,
-                                        "shadowColor": "rgba(0, 0, 0, 0.5)",
-                                    }
-                                },
-                            }
-                                    ],
-                    }
-
-        st.markdown("Select a legend, see the detail")
-        events = {
-            "legendselectchanged": "function(params) { return params.selected }",
-        }
-        s = st_echarts(
-            options=options, events=events, height="600px", key="render_pie_events"
-        )
-        if s is not None:
-            st.write(s)
+    # row8_spacer1, row8_1, row8_spacer2, row8_2, row8_spacer3  = st.columns((.2, 2.3, .4, 4.4, .2))
+    row8_spacer1, row8_1, row8_spacer2 = st.columns((.2, 7.1, .2))
     
-    with row8_2:
+    try:
         contract_df, contract_name = get_contract_df(input_address, address_df, str(txns_type_botton), str(txns_year_botton), str(txns_month_botton))
-        st.table(contract_df)
+        pie_list, statis_df = count_contra_values(contract_df)
+    except:
+        st.write("No Internal Data Dound")
+    with row8_1:
+        try:
+            options = {
+                        "title": {"text": "Smart Contract interaction distribution", "subtext": "{}-{}".format(txns_year_botton, txns_month_botton), "left": "center"},
+                        "tooltip": {"trigger": "item"},
+                        "legend": {
+                            "orient": "vertical",
+                            "left": "left",
+                        },
+                        "series": [
+                                {
+                                    "name": "Contract Name",
+                                    "type": "pie",
+                                    "radius": "50%",
+                                    # "data": [
+                                    #     {"value": 1048, "name": "搜索引擎"},
+                                    #     {"value": 735, "name": "直接访问"},
+                                    #     {"value": 580, "name": "邮件营销"},
+                                    #     {"value": 484, "name": "联盟广告"},
+                                    #     {"value": 300, "name": "视频广告"},
+                                    # ],
+                                    "data": pie_list,
+                                    "emphasis": {
+                                        "itemStyle": {
+                                            "shadowBlur": 5,
+                                            "shadowOffsetX": 0,
+                                            "shadowColor": "rgba(0, 0, 0, 0.5)",
+                                        }
+                                    },
+                                }
+                                        ],
+                        }
+
+            st.markdown("Select a legend, see the detail")
+            events = {
+                "legendselectchanged": "function(params) { return params.selected }",
+            }
+            s = st_echarts(
+                options=options, events=events, height="600px", key="render_pie_events"
+            )
+            if s is not None:
+                st.write(s)
+        except:
+            st.write("No Data Found")
+    # with row8_2:
+    #     st.table(statis_df)
     # test_df = contract_df.insert(0, "url", "[Jackson Yin](https://www.linkedin.com/in/jackson-yin)")
     row9_spacer1, row9_1, row9_spacer2 = st.columns((.2, 7.1, .2))
 
     with row9_1:
-        contactname_list = set(contract_name.values())
-        contract_button = st.selectbox("Select a Contract to see details", contactname_list)
-        select_contract_df = contract_df[contract_df.ContractName == contract_button]
-        select_contract_df = add_contract_url(select_contract_df)
-        st.write(select_contract_df)
-        # st.write((contract_df[contract_df.ContractName == contract_button]).to_markdown())
+        try:
+            contactname_list = set(contract_name.values())
+            contract_button = st.selectbox("Select a Contract to see details", contactname_list)
 
+            contract_detail_df = contract_df.copy(deep = True)
+            select_contract_df = contract_detail_df[contract_detail_df.ContractName == contract_button]
+            # st.write(select_contract_df)
+            select_contract_df = add_contract_url(select_contract_df)
+            st.write(select_contract_df)
+            # st.write((contract_df[contract_df.ContractName == contract_button]).to_markdown())
+        except:
+            st.write("No Data Found")
 else:
     st.markdown("Give us valid address !")

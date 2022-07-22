@@ -162,14 +162,51 @@ def get_contract_df(target_address, address_df, txn_type, txn_year, txn_month):
             contract_df.loc[contract_df.ads == ads, "ContractName"] = contract_name[ads]
         return contract_df, contract_name
     else:
-        st.write("No Data Found")
+        # st.write("No Data Found")
+        pass
 
 def add_contract_url(contra_df):
-
-    for i in range(len(contra_df)):
-        contra_ads = contra_df["ads"][i]
-        name = contra_df["ContractName"][i]
+    output_df = contra_df.copy(deep = True)
+    output_df.reset_index(inplace = True)
+    for i in range(len(output_df)):
+        # st.write("i :", i)
+        # st.write(output_df)
+        hash = output_df["hash"][i]
+        contra_ads = output_df["ads"][i]
+        name = output_df["ContractName"][i]
         url = "https://etherscan.io/address/{}".format(contra_ads)
-        contra_df.loc[i, "ContractName"] = "[{}]({})".format(name, url)
-        
-    return contra_df.to_markdown()
+        hash_url = "https://etherscan.io/tx/{}".format(hash)
+        output_df.loc[i, "ContractName"] = "[{}]({})".format(name, url)
+        output_df.loc[i, "hash"] = "[{}]({})".format("Transaction details", hash_url)
+
+    return output_df.to_markdown()
+
+def count_contra_values(contract_df):
+    statis_df = {}
+    contra_name = set(contract_df["ContractName"])
+    
+    for name in contra_name:
+        if name in statis_df.keys():
+
+            for i in range(len(contract_df)):
+                if contract_df.loc[i, "ContractName"] == name:
+                    value = contract_df.loc[i, "value(ETH)"]
+                    statis_df[name] += float(value)
+        else:
+            statis_df[name] = 0
+
+            for i in range(len(contract_df)):
+                if contract_df.loc[i, "ContractName"] == name:
+                    value = contract_df.loc[i, "value(ETH)"]
+                    statis_df[name] += float(value)
+
+    output_list = []
+
+    for key in statis_df:
+        tmp_df = {}
+        tmp_df["name"] = key
+        tmp_df["value"] = statis_df[key]
+        output_list.append(tmp_df)
+    
+    return output_list, pd.DataFrame([statis_df])
+
