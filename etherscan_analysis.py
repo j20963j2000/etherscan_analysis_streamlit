@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from get_address_details import Get_address_details, get_txn_counts, get_contract_df
+from get_address_details import Get_address_details, get_txn_counts, get_contract_df, add_contract_url
 from ploty import  plot_single_address_txns
 from control_botton_config import row7_txn_month_config
 
@@ -146,13 +146,16 @@ if len(input_address) == 42:
     with row8_2:
         contract_df, contract_name = get_contract_df(input_address, address_df, str(txns_type_botton), str(txns_year_botton), str(txns_month_botton))
         st.table(contract_df)
-
+    # test_df = contract_df.insert(0, "url", "[Jackson Yin](https://www.linkedin.com/in/jackson-yin)")
     row9_spacer1, row9_1, row9_spacer2 = st.columns((.2, 7.1, .2))
 
     with row9_1:
         contactname_list = set(contract_name.values())
         contract_button = st.selectbox("Select a Contract to see details", contactname_list)
-        st.write(contract_df[contract_df.ContractName == contract_button])
+        select_contract_df = contract_df[contract_df.ContractName == contract_button]
+        select_contract_df = add_contract_url(select_contract_df)
+        st.write(select_contract_df)
+        # st.write((contract_df[contract_df.ContractName == contract_button]).to_markdown())
 
 else:
     st.markdown("Give us valid address !")

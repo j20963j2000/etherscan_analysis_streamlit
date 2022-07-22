@@ -163,3 +163,13 @@ def get_contract_df(target_address, address_df, txn_type, txn_year, txn_month):
         return contract_df, contract_name
     else:
         st.write("No Data Found")
+
+def add_contract_url(contra_df):
+
+    for i in range(len(contra_df)):
+        contra_ads = contra_df["ads"][i]
+        name = contra_df["ContractName"][i]
+        url = "https://etherscan.io/address/{}".format(contra_ads)
+        contra_df.loc[i, "ContractName"] = "[{}]({})".format(name, url)
+        
+    return contra_df.to_markdown()
