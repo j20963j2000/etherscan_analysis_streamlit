@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from get_address_details import Get_address_details, get_txn_counts, get_contract_df, add_contract_url, count_contra_values
+from get_address_details import Get_address_details, get_txn_counts, get_contract_df, add_contract_url, count_contra_values, known_address
 from ploty import  plot_single_address_txns
 from control_botton_config import row7_txn_month_config
 
@@ -42,10 +42,16 @@ st.sidebar.markdown("**Who you want to trace ?**")
 
 if st.sidebar.button("Vitalik.eth"):
     input_address = st.sidebar.text_input("Ether Address below", value = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045")
+elif st.sidebar.button("Vb2"):
+        input_address = st.sidebar.text_input("Ether Address below", value = "0x1db3439a222c519ab44bb1144fc28167b4fa6ee6")
+elif st.sidebar.button("SBF"):
+        input_address = st.sidebar.text_input("Ether Address below", value = "0x477573f212a7bdd5f7c12889bd1ad0aa44fb82aa")
 else:
-    input_address = st.sidebar.text_input("Ether Address below", value = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045")
+    input_address = st.sidebar.text_input("Ether Address below")
     
+input_address = input_address.lower()
 
+# input_address = known_address()
 
 ### TXNS ACTIVITIES ###
 if len(input_address) == 42:

@@ -108,9 +108,14 @@ def get_txn_counts(address_df, txn_type, txn_time):
         return result
     
     elif txn_type != "all" and txn_time == "all":
-        mask = address_df["txn_type"] == txn_type
-        year_list = {str(i):len(address_df[mask].loc[str(i)]) for i in range(2015, 2023)}
-        result = pd.DataFrame(list(year_list.items()), columns = ["year", "counts"])
+        year_list_output = {str(year):0 for year in range(2015, 2023)}
+
+        for i in range(2015, 2023):
+            tmp_df = address_df.loc["{}".format(i)]
+            tmp_mask = tmp_df["txn_type"] == txn_type
+            year_list_output[str(i)] = len(tmp_df[tmp_mask])
+            
+        result = pd.DataFrame(list(year_list_output.items()), columns = ["year", "counts"])
         return result
 
     else:            
@@ -167,7 +172,7 @@ def get_contract_df(target_address, address_df, txn_type, txn_year, txn_month):
 
 def add_contract_url(contra_df):
     output_df = contra_df.copy(deep = True)
-    output_df.reset_index(inplace = True)
+    output_df.reset_index(inplace = True, drop = True)
     for i in range(len(output_df)):
         # st.write("i :", i)
         # st.write(output_df)
@@ -210,3 +215,13 @@ def count_contra_values(contract_df):
     
     return output_list, pd.DataFrame([statis_df])
 
+def known_address(address_input):
+
+    if st.sidebar.button("Vitalik.eth"):
+        input_address = st.sidebar.text_input("Ether Address below", value = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045")
+    elif st.sidebar.button("Vb2"):
+        input_address = st.sidebar.text_input("Ether Address below", value = "0x1db3439a222c519ab44bb1144fc28167b4fa6ee6")
+    else:
+        input_address = st.sidebar.text_input("Ether Address below", value = address_input)
+    
+    input_address = input_address.lower()
