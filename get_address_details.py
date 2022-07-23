@@ -8,6 +8,7 @@ API_KEY = "PER4V6RYCAU4TZ54M69D9GXHWNVKX6DY7Z"
 BASE_URL = "https://api.etherscan.io/api"
 ETHER_VALUE = 10 ** 18
 
+@st.cache
 class Get_address_details():
     
     def __init__(self, address):
@@ -80,6 +81,7 @@ class Get_address_details():
 
         return date_df_out
 
+@st.cache
 def make_sourcecode_api_url(address, **kwargs):
     url = BASE_URL + f"?module=contract&action=getsourcecode&address={address}&apikey={API_KEY}"
 
@@ -88,22 +90,40 @@ def make_sourcecode_api_url(address, **kwargs):
 
     return url
 
+@st.cache
 def get_contract_name(contract_address):
     responce = get(make_sourcecode_api_url(contract_address)).json()
     name = responce["result"][0]["ContractName"]
     return name
 
+@st.cache
 def get_txn_counts(address_df, txn_type, txn_time):
 
     if txn_type == "all" and txn_time == "all":
-        year_list = {str(i):len(address_df.loc[str(i)]) for i in range(2015, 2023)}
-        result = pd.DataFrame(list(year_list.items()), columns = ["year", "counts"])
+        year_list_output = {str(year):0 for year in range(2015, 2023)}
+
+        for i in range(2015, 2023):
+            try:
+                tmp_df = address_df.loc["{}".format(i)]
+                # tmp_mask = tmp_df["txn_type"] == txn_type
+                year_list_output[str(i)] = len(tmp_df)
+            except:
+                pass
+
+        result = pd.DataFrame(list(year_list_output.items()), columns = ["year", "counts"])
         return result
     
     elif txn_type == "all" and txn_time != "all":
         year_list_output = {str(month):0 for month in range(1, 13)}
-        month_count = {str(i):len(address_df.loc["{}-{}".format(txn_time, i)]) for i in range(1, 13)}
-        year_list_output.update(month_count)
+
+        for i in range(1, 13):
+            try:
+                tmp_df = address_df.loc["{}-{}".format(txn_time, i)]
+                # tmp_mask = tmp_df["txn_type"] == txn_type
+                year_list_output[str(i)] = len(tmp_df)
+            except:
+                pass
+
         result = pd.DataFrame(list(year_list_output.items()), columns = ["month", "counts"])
         return result
     
@@ -111,10 +131,13 @@ def get_txn_counts(address_df, txn_type, txn_time):
         year_list_output = {str(year):0 for year in range(2015, 2023)}
 
         for i in range(2015, 2023):
-            tmp_df = address_df.loc["{}".format(i)]
-            tmp_mask = tmp_df["txn_type"] == txn_type
-            year_list_output[str(i)] = len(tmp_df[tmp_mask])
-            
+            try:
+                tmp_df = address_df.loc["{}".format(i)]
+                tmp_mask = tmp_df["txn_type"] == txn_type
+                year_list_output[str(i)] = len(tmp_df[tmp_mask])
+            except:
+                pass
+
         result = pd.DataFrame(list(year_list_output.items()), columns = ["year", "counts"])
         return result
 
@@ -122,14 +145,19 @@ def get_txn_counts(address_df, txn_type, txn_time):
         year_list_output = {str(month):0 for month in range(1, 13)}
 
         for i in range(1, 13):
-            tmp_df = address_df.loc["{}-{}".format(txn_time, i)]
-            tmp_mask = tmp_df["txn_type"] == txn_type
-            year_list_output[str(i)] = len(tmp_df[tmp_mask])
+            try:
+                tmp_df = address_df.loc["{}-{}".format(txn_time, i)]
+                tmp_mask = tmp_df["txn_type"] == txn_type
+                year_list_output[str(i)] = len(tmp_df[tmp_mask])
+            except:
+                pass
 
         result = pd.DataFrame(list(year_list_output.items()), columns = ["month", "counts"])
         return result
 
+@st.cache
 def get_contract_df(target_address, address_df, txn_type, txn_year, txn_month):
+    # for both normal and internal transactions
     mask = address_df["txn_type"] == txn_type
     tmp_df = address_df[mask].loc[txn_year+"-"+txn_month]
 
@@ -170,6 +198,7 @@ def get_contract_df(target_address, address_df, txn_type, txn_year, txn_month):
         # st.write("No Data Found")
         pass
 
+@st.cache
 def add_contract_url(contra_df):
     output_df = contra_df.copy(deep = True)
     output_df.reset_index(inplace = True, drop = True)
@@ -186,6 +215,7 @@ def add_contract_url(contra_df):
 
     return output_df.to_markdown()
 
+@st.cache
 def count_contra_values(contract_df):
     statis_df = {}
     contra_name = set(contract_df["ContractName"])
@@ -215,6 +245,7 @@ def count_contra_values(contract_df):
     
     return output_list, pd.DataFrame([statis_df])
 
+@st.cache
 def known_address(address_input):
 
     if st.sidebar.button("Vitalik.eth"):
@@ -225,3 +256,25 @@ def known_address(address_input):
         input_address = st.sidebar.text_input("Ether Address below", value = address_input)
     
     input_address = input_address.lower()
+
+@st.cache
+def set_input_address():
+
+    if st.sidebar.button("Vitalik.eth", key = "1"):
+        input_address = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+    if st.sidebar.button("Vb2", key = "2"):
+        input_address = "0x1db3439a222c519ab44bb1144fc28167b4fa6ee6"
+    if st.sidebar.button("SBF", key = "3"):
+        input_address = "0x477573f212a7bdd5f7c12889bd1ad0aa44fb82aa"
+    if st.sidebar.button("Stephen Curry", key = "4"):
+        input_address = "0x3becf83939f34311b6bee143197872d877501b11"
+    
+    input_address = input_address.lower()
+    
+    return input_address
+
+@st.cache
+def check_button_status(bool):
+    button_status = False
+
+    return button_status

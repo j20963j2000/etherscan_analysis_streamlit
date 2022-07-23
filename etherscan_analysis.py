@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from get_address_details import Get_address_details, get_txn_counts, get_contract_df, add_contract_url, count_contra_values, known_address
+from get_address_details import Get_address_details, get_txn_counts, get_contract_df, add_contract_url, count_contra_values, known_address, check_button_status
 from ploty import  plot_single_address_txns
 from control_botton_config import row7_txn_month_config
 
@@ -25,36 +25,43 @@ with row0_2:
 row3_spacer1, row3_1, row3_spacer2 = st.columns((.1, 3.2, .1))
 with row3_1:
     st.markdown("Hello tracers, this app could help you to trace activities for any address on Etherscan.")
-    st.markdown("Let's start tracing ! ** 👇")
+    st.markdown("Let's start tracing !  👇👇👇")
 
 
 #################
 ### SELECTION ###
 #################
 
-st.sidebar.text('')
+from PIL import Image
+image = Image.open('ether.png')
+
+st.sidebar.image(image, output_format ="PNG")
 st.sidebar.text('')
 st.sidebar.text('')
 
 ### INPUT ADDRESS ###
 
-st.sidebar.markdown("**Who you want to trace ?**")
+st.sidebar.header("**Who you want to trace ?**")
 
-if st.sidebar.button("Vitalik.eth"):
-    input_address = st.sidebar.text_input("Ether Address below", value = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045")
-elif st.sidebar.button("Vb2"):
-        input_address = st.sidebar.text_input("Ether Address below", value = "0x1db3439a222c519ab44bb1144fc28167b4fa6ee6")
-elif st.sidebar.button("SBF"):
-        input_address = st.sidebar.text_input("Ether Address below", value = "0x477573f212a7bdd5f7c12889bd1ad0aa44fb82aa")
-else:
-    input_address = st.sidebar.text_input("Ether Address below")
-    
-input_address = input_address.lower()
+# 0x5314c8991d3AcB5d5245Ae8D1320191e8EB0454c
 
-# input_address = known_address()
+user_input = st.sidebar.text_input("Ether Address below")
+if user_input != "":
+    st.session_state.input_address = user_input
+if st.sidebar.button("Vitalik.eth", key = "1"):
+    st.session_state.input_address = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+if st.sidebar.button("Vb2", key = "2"):
+    st.session_state.input_address = "0x1db3439a222c519ab44bb1144fc28167b4fa6ee6"
+if st.sidebar.button("SBF", key = "3"):
+    st.session_state.input_address = "0x477573f212a7bdd5f7c12889bd1ad0aa44fb82aa"
+if st.sidebar.button("Stephen Curry", key = "4"):
+    st.session_state.input_address = "0x3becf83939f34311b6bee143197872d877501b11"
+
 
 ### TXNS ACTIVITIES ###
-if len(input_address) == 42:
+if "input_address" in st.session_state and len(st.session_state.input_address) == 42:
+
+    input_address = st.session_state.input_address.lower()
 
     get_address_details = Get_address_details(input_address)
     address_df = get_address_details.get_all_txns()
@@ -79,6 +86,9 @@ if len(input_address) == 42:
         internal_counts = len(address_df[address_df["txn_type"]=="internal"])
         total_counts = normal_counts + internal_counts
         
+        st.text("")
+        st.text("")
+        st.text("")
         st.metric(label="All Normal Txns", value="{} | {:.1f}%".format(normal_counts, 100*normal_counts/total_counts))
         st.metric(label="All Internal Txns", value="{} | {:.1f}%".format(internal_counts, 100*internal_counts/total_counts))
 
@@ -95,7 +105,7 @@ if len(input_address) == 42:
     row7_spacer1, row7_1, row7_spacer2, row7_2, row7_spacer3, row7_3, row7_spacer4  = st.columns((1, 2, 1, 2, 1, 2, 1))
 
     with row7_1:
-        txns_type = ["internal"]
+        txns_type = ["normal", "internal"]
         txns_type_botton = st.selectbox ("Tracing what kinds of transactions ?", txns_type)
 
     with row7_2:
@@ -178,4 +188,4 @@ if len(input_address) == 42:
         except:
             st.write("No Data Found")
 else:
-    st.markdown("Give us valid address !")
+    st.info("Give us valid address !")
