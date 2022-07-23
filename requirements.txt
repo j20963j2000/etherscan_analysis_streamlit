@@ -1,0 +1,10 @@
+pandas
+streamlit
+numpy
+streamlit_echarts
+PIL
+seaborn
+matplotlib
+calendar 
+requests
+datetime
