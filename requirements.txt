@@ -4,7 +4,6 @@ numpy
 streamlit_echarts
 Pillow
 seaborn
-matplotlib
-calendar 
+matplotlib 
 requests
 datetime
