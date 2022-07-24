@@ -202,8 +202,8 @@ def add_contract_url(contra_df):
     output_df = contra_df.copy(deep = True)
     output_df.reset_index(inplace = True, drop = True)
     for i in range(len(output_df)):
-        st.write("i :", i)
-        st.write(output_df)
+        # st.write("i :", i)
+        # st.write(output_df)
         hash = output_df["hash"][i]
         contra_ads = output_df["ads"][i]
         name = output_df["ContractName"][i]
@@ -211,8 +211,9 @@ def add_contract_url(contra_df):
         hash_url = "https://etherscan.io/tx/{}".format(hash)
         output_df.loc[i, "ContractName"] = "[{}]({})".format(name, url)
         output_df.loc[i, "hash"] = "[{}]({})".format("Transaction details", hash_url)
-        st.write(output_df)
-    return output_df.to_markdown()
+        # st.write(output_df)
+    # return output_df.to_markdown()
+    return output_df
 
 @st.cache
 def count_contra_values(contract_df):
