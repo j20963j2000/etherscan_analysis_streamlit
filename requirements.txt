@@ -2,7 +2,7 @@ pandas
 streamlit
 numpy
 streamlit_echarts
-PIL
+Pillow
 seaborn
 matplotlib
 calendar 
