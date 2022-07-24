@@ -201,17 +201,19 @@ def get_contract_df(target_address, address_df, txn_type, txn_year, txn_month):
 def add_contract_url(contra_df):
     output_df = contra_df.copy(deep = True)
     output_df.reset_index(inplace = True, drop = True)
-    for i in range(len(output_df)):
-        # st.write("i :", i)
-        # st.write(output_df)
-        hash = output_df["hash"][i]
-        contra_ads = output_df["ads"][i]
-        name = output_df["ContractName"][i]
-        url = "https://etherscan.io/address/{}".format(contra_ads)
-        hash_url = "https://etherscan.io/tx/{}".format(hash)
-        output_df.loc[i, "ContractName"] = "[{}]({})".format(name, url)
-        output_df.loc[i, "hash"] = "[{}]({})".format("Transaction details", hash_url)
-
+    try:
+        for i in range(len(output_df)):
+            # st.write("i :", i)
+            # st.write(output_df)
+            hash = output_df["hash"][i]
+            contra_ads = output_df["ads"][i]
+            name = output_df["ContractName"][i]
+            url = "https://etherscan.io/address/{}".format(contra_ads)
+            hash_url = "https://etherscan.io/tx/{}".format(hash)
+            output_df.loc[i, "ContractName"] = "[{}]({})".format(name, url)
+            output_df.loc[i, "hash"] = "[{}]({})".format("Transaction details", hash_url)
+    except Exception as error:
+        st.error(error)
     return output_df.to_markdown()
 
 @st.cache
