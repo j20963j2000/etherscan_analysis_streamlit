@@ -1,4 +1,3 @@
-from calendar import c
 import pandas as pd
 from requests import get
 from datetime import datetime
