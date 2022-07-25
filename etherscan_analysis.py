@@ -186,12 +186,12 @@ if "input_address" in st.session_state and len(st.session_state.input_address) =
             select_contract_df = add_contract_url(select_contract_df)
             # add_contract_url(select_contract_df)
             # print(select_contract_df)
-            select_contract_df
             # st.markdown(select_contract_df)
             # st.write(select_contract_df.to_markdown())
-            # st.write(st.session_state.md_contra_df)
+            st.write(select_contract_df)
             # st.write((contract_df[contract_df.ContractName == contract_button]).to_markdown())
-        except:
+        except Exception as error:
+            st.info(error)
             st.write("No Data Found")
 else:
     st.info("Give us valid address !")
