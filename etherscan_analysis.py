@@ -183,8 +183,8 @@ if "input_address" in st.session_state and len(st.session_state.input_address) =
             # st.write(contract_detail_df)
             select_contract_df = contract_detail_df[contract_detail_df.ContractName == contract_button]
             # st.write(select_contract_df)
-            # select_contract_df = add_contract_url(select_contract_df)
-            add_contract_url(select_contract_df)
+            select_contract_df = add_contract_url(select_contract_df)
+            # add_contract_url(select_contract_df)
             # print(select_contract_df)
             # st.markdown(select_contract_df)
             # st.write(select_contract_df.to_markdown())

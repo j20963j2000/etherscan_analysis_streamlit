@@ -212,8 +212,8 @@ def add_contract_url(contra_df):
         output_df.loc[i, "ContractName"] = "[{}]({})".format(name, url)
         output_df.loc[i, "hash"] = "[{}]({})".format("Transaction details", hash_url)
         # st.write(output_df)
-    # return output_df.to_markdown()
-    st.session_state.md_contra_df = output_df.to_markdown()
+    return output_df.to_markdown()
+    # st.session_state.md_contra_df = output_df.to_markdown()
     # return output_df
 
 @st.cache
