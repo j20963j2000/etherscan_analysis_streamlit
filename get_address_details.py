@@ -197,7 +197,7 @@ def get_contract_df(target_address, address_df, txn_type, txn_year, txn_month):
         # st.write("No Data Found")
         pass
 
-@st.cache
+# @st.cache
 def add_contract_url(contra_df):
     output_df = contra_df.copy(deep = True)
     output_df.reset_index(inplace = True, drop = True)
