@@ -1,4 +1,5 @@
 pandas
+tabulate
 streamlit
 numpy
 streamlit_echarts
