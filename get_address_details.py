@@ -3,7 +3,15 @@ from requests import get
 from datetime import datetime
 import streamlit as st
 
-API_KEY = "PER4V6RYCAU4TZ54M69D9GXHWNVKX6DY7Z"
+try:
+    import yaml
+    with open("config.yaml", "r") as f:
+        data = yaml.load(f, Loader=yaml.SafeLoader)
+    API_KEY = data["API_KEY"]
+except Exception as e:
+    print(e)
+    API_KEY = st.secrets["API_KEY"]
+
 BASE_URL = "https://api.etherscan.io/api"
 ETHER_VALUE = 10 ** 18
 
