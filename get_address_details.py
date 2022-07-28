@@ -60,33 +60,63 @@ class Get_address_details():
         """
         Get all txns 
         """
-        transactions_url = self.make_api_url("account", "txlist", startblock=0, endblock=99999999, page=1, offset=10000, sort="asc")
-        response = get(transactions_url)
-        nor_data = response.json()["result"]
-        nor_df = pd.DataFrame(nor_data)
-        nor_df.insert(1, "txn_type", value ="normal")
-        
-        internal_tx_url = self.make_api_url("account", "txlistinternal", startblock=0, endblock=99999999, page=1, offset=10000, sort="asc")
-        in_response = get(internal_tx_url)
-        in_data = in_response.json()["result"]
-        in_df = pd.DataFrame(in_data)
-        in_df.insert(1, "txn_type", value = "internal")
-        
-        data_df = pd.concat([nor_df, in_df], join = "outer")
-        
-        new_time_list = []
-        for idx, timestamp in enumerate(data_df["timeStamp"]):
-            data_df["timeStamp"][idx] = int(timestamp)
-            new_time = str(datetime.fromtimestamp(int(timestamp))).split(" ")[0]
-            new_time_list.append(new_time)
 
-        data_df.insert(1, "datetime", new_time_list)
-        data_df["datetime"] = pd.to_datetime(data_df["datetime"])
-        data_df = data_df.sort_index()
-        
-        date_df_out = data_df.set_index("datetime")
+        nor_txn_exist = True
+        int_yxn_exist = True
 
-        return date_df_out
+        # print("here 1")
+        try:
+            # print("here 2")
+            transactions_url = self.make_api_url("account", "txlist", startblock=0, endblock=99999999, page=1, offset=10000, sort="asc")
+            response = get(transactions_url)
+            nor_data = response.json()["result"]
+            nor_df = pd.DataFrame(nor_data)
+            nor_df.insert(1, "txn_type", value ="normal")
+        except Exception as e:
+            st.info(e)
+            nor_txn_exist = False
+
+        try:
+            # print("here 3")
+            internal_tx_url = self.make_api_url("account", "txlistinternal", startblock=0, endblock=99999999, page=1, offset=10000, sort="asc")
+            in_response = get(internal_tx_url)
+            in_data = in_response.json()["result"]
+            in_df = pd.DataFrame(in_data)
+            in_df.insert(1, "txn_type", value = "internal")
+        except Exception as e:
+            st.info(e)
+            int_yxn_exist = False
+        
+        # print("here 4")
+        if nor_txn_exist == True and int_yxn_exist == True:
+            data_df = pd.concat([nor_df, in_df], join = "outer")
+        
+        elif nor_txn_exist == True and int_yxn_exist == False:
+            data_df = nor_df
+        
+        elif nor_txn_exist == False and int_yxn_exist == True:
+            data_df = in_df
+        else:
+            data_df = None
+
+        # print("here 5")
+        if len(data_df) != 0:
+            # print("here 6")
+            new_time_list = []
+            for idx, timestamp in enumerate(data_df["timeStamp"]):
+                data_df["timeStamp"][idx] = int(timestamp)
+                new_time = str(datetime.fromtimestamp(int(timestamp))).split(" ")[0]
+                new_time_list.append(new_time)
+
+            data_df.insert(1, "datetime", new_time_list)
+            data_df["datetime"] = pd.to_datetime(data_df["datetime"])
+            data_df = data_df.sort_index()
+            
+            date_df_out = data_df.set_index("datetime")
+
+            return date_df_out
+        else:
+            return None
 
 @st.cache
 def make_sourcecode_api_url(address, **kwargs):
